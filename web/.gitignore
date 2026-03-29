@@ -1,0 +1,26 @@
+# ──────────────────────────────────────────
+#  Web (React / Vite / TypeScript)
+# ──────────────────────────────────────────
+
+# Dependencies
+node_modules/
+
+# Environment variables — JANGAN pernah diupload!
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Vite cache
+.vite/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,36 @@
+# ──────────────────────────────────────────
+#  API (Node.js / Express / Prisma)
+# ──────────────────────────────────────────
+
+# Dependencies
+node_modules/
+
+# Environment variables — JANGAN pernah diupload!
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Logs
+logger/
+*.log
+logs/
+
+# File upload sementara (multer temp)
+public/uploads/
+uploads/
+tmp/
+
+# Prisma generated client (di-generate ulang via `prisma generate`)
+src/generated/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,29 @@
+# ──────────────────────────────────────────
+#  Root .gitignore
+# ──────────────────────────────────────────
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude Code (konfigurasi lokal, jangan diupload)
+.claude/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archive files (jangan upload zip ke repo)
+*.zip
+*.tar.gz
+*.rar
+
+# Logs
+*.log
+
+# Temp
+*.tmp
+*.temp

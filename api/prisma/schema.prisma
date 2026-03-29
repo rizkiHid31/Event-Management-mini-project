@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  ORGANIZER
+}
+
+enum OrderStatus {
+  WAITING_PAYMENT
+  WAITING_CONFIRMATION
+  DONE
+  REJECTED
+  EXPIRED
+  CANCELLED
+  PAID // legacy – kept for DB compatibility, new orders use DONE
+}
+
+enum EventCategory {
+  MUSIC
+  SPORTS
+  TECHNOLOGY
+  BUSINESS
+  FOOD
+  ART
+  EDUCATION
+  OTHER
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum PaymentMethod {
+  TRANSFER
+  WALLET
+  POINTS
+}
+
+model User {
+  id           Int     @id @default(autoincrement())
+  name         String
+  email        String  @unique
+  password     String
+  role         Role    @default(CUSTOMER)
+  referralCode String  @unique
+  avatar       String?
+  phone        String?
+  bio          String?
+
+  referredById Int?
+  ReferredBy   User?  @relation("UserReferrals", fields: [referredById], references: [id])
+  Referrals    User[] @relation("UserReferrals")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  Events   Event[]
+  Wallet   Wallet?
+  Orders   Order[]
+  Reviews  Review[]
+  Vouchers Voucher[] @relation("OrganizerVouchers")
+}
+
+model Event {
+  id          Int           @id @default(autoincrement())
+  organizerId Int
+  title       String        @unique
+  slug        String        @unique
+  description String        @default("")
+  location    String
+  image       String?
+  price       Decimal       @db.Decimal(10, 2)
+  category    EventCategory @default(OTHER)
+  startDate   DateTime      @default(now())
+  endDate     DateTime      @default(now())
+  capacity    Int           @default(100)
+  isFree      Boolean       @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  User        User         @relation(fields: [organizerId], references: [id])
+  EventImages EventImage[]
+  Orders      Order[]
+  Reviews     Review[]
+  Vouchers    Voucher[]
+}
+
+model EventImage {
+  id      Int    @id @default(autoincrement())
+  eventId Int
+  url     String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  Events Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Wallet {
+  id      Int     @id @default(autoincrement())
+  userId  Int     @unique
+  balance Decimal @db.Decimal(10, 2) @default(0)
+  points  Int     @default(0)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  User User @relation(fields: [userId], references: [id])
+}
+
+model Order {
+  id             Int         @id @default(autoincrement())
+  eventId        Int
+  customerId     Int
+  quantity       Int         @default(1)
+  totalAmount    Decimal     @db.Decimal(10, 2)
+  discountAmount Decimal     @db.Decimal(10, 2) @default(0)
+  pointsUsed     Int         @default(0)
+  voucherId      Int?
+  paymentProof   String?
+  paymentMethod  PaymentMethod @default(TRANSFER)
+  status         OrderStatus @default(WAITING_PAYMENT)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  Event    Event    @relation(fields: [eventId], references: [id])
+  Customer User     @relation(fields: [customerId], references: [id])
+  Voucher  Voucher? @relation(fields: [voucherId], references: [id])
+}
+
+model Voucher {
+  id            Int          @id @default(autoincrement())
+  eventId       Int
+  organizerId   Int
+  code          String       @unique
+  discountType  DiscountType @default(PERCENTAGE)
+  discountValue Decimal      @db.Decimal(10, 2)
+  startDate     DateTime
+  endDate       DateTime
+  maxUses       Int          @default(1)
+  usedCount     Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  Event     Event   @relation(fields: [eventId], references: [id])
+  Organizer User    @relation("OrganizerVouchers", fields: [organizerId], references: [id])
+  Orders    Order[]
+}
+
+model Review {
+  id      Int    @id @default(autoincrement())
+  eventId Int
+  userId  Int
+  rating  Int    @default(5)
+  comment String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  User  User  @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+}
