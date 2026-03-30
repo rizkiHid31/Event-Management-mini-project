@@ -14,14 +14,17 @@ export async function createOrderService(
 
   const event = await eventModel.findUnique({
     where: { id: parsed.eventId, deletedAt: null },
-    include: { _count: { select: { Orders: { where: { status: "PAID" } } } } },
   });
 
   if (!event) {
     throw new AppError("Event not found", 404);
   }
 
-  const ticketsSold = event._count.Orders;
+  const soldAggregate = await prisma.order.aggregate({
+    where: { eventId: parsed.eventId, status: { notIn: ["EXPIRED", "REJECTED", "CANCELLED"] } },
+    _sum: { quantity: true },
+  });
+  const ticketsSold = soldAggregate._sum.quantity ?? 0;
   if (ticketsSold + parsed.quantity > event.capacity) {
     throw new AppError("Not enough tickets available", 400);
   }

@@ -13,7 +13,7 @@ export async function createReviewService(
   if (!event) throw new AppError("Event not found", 404);
 
   const hasPaidOrder = await prisma.order.findFirst({
-    where: { customerId: userId, eventId: parsed.eventId, status: "PAID" },
+    where: { customerId: userId, eventId: parsed.eventId, status: { in: ["PAID", "DONE"] } },
   });
 
   if (!hasPaidOrder) {

@@ -68,6 +68,8 @@ export default function EventDetailPage() {
       const availablePoints = user?.Wallet?.points ?? 0;
       const pointsToUse = paymentMethod === "TRANSFER"
         ? Math.min(pointsInput, availablePoints, Math.floor(afterVoucher))
+        : paymentMethod === "POINTS"
+        ? Math.min(availablePoints, Math.ceil(afterVoucher))
         : 0;
 
       await apiClient.post(API_ENDPOINTS.ORDERS.CREATE, {
@@ -535,10 +537,10 @@ export default function EventDetailPage() {
                       const availablePoints = user?.Wallet?.points ?? 0;
                       const pointsDiscount = paymentMethod === "TRANSFER"
                         ? Math.min(pointsInput, availablePoints, Math.floor(afterVoucher))
+                        : paymentMethod === "POINTS"
+                        ? Math.min(availablePoints, Math.ceil(afterVoucher))
                         : 0;
-                      const finalTotal = paymentMethod === "POINTS"
-                        ? 0
-                        : Math.max(0, afterVoucher - pointsDiscount);
+                      const finalTotal = Math.max(0, afterVoucher - pointsDiscount);
                       return (
                         <div className="rounded-lg border border-zinc-700 bg-zinc-900/50 p-3 text-sm">
                           <div className="flex justify-between text-zinc-400">
@@ -555,12 +557,6 @@ export default function EventDetailPage() {
                             <div className="flex justify-between text-amber-400">
                               <span>Points ({pointsDiscount.toLocaleString("id-ID")} pts)</span>
                               <span>- {formatCurrency(pointsDiscount)}</span>
-                            </div>
-                          )}
-                          {paymentMethod === "POINTS" && afterVoucher > 0 && (
-                            <div className="flex justify-between text-amber-400">
-                              <span>Points ({Math.ceil(afterVoucher).toLocaleString("id-ID")} pts)</span>
-                              <span>- {formatCurrency(afterVoucher)}</span>
                             </div>
                           )}
                           {paymentMethod === "WALLET" && afterVoucher > 0 && (

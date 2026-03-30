@@ -154,7 +154,7 @@ export async function getEventBySlugService(slug: string) {
         orderBy: { createdAt: "desc" },
         take: 20,
       },
-      _count: { select: { Orders: { where: { status: "PAID" } }, Reviews: true } },
+      _count: { select: { Reviews: true } },
     },
   });
 
@@ -163,12 +163,18 @@ export async function getEventBySlugService(slug: string) {
   }
 
   const reviewModel = prisma as any;
-  const avgRating = await reviewModel.review.aggregate({
-    where: { eventId: event.id },
-    _avg: { rating: true },
-  });
+  const [avgRating, soldAggregate] = await Promise.all([
+    reviewModel.review.aggregate({
+      where: { eventId: event.id },
+      _avg: { rating: true },
+    }),
+    prisma.order.aggregate({
+      where: { eventId: event.id, status: { notIn: ["EXPIRED", "REJECTED", "CANCELLED"] } },
+      _sum: { quantity: true },
+    }),
+  ]);
 
-  const ticketsSold = event._count.Orders;
+  const ticketsSold = soldAggregate._sum.quantity ?? 0;
   const availableSeats = event.capacity - ticketsSold;
 
   return {
@@ -186,7 +192,7 @@ export async function getEventByIdService(id: number) {
     where: { id, deletedAt: null },
     include: {
       User: { select: { id: true, name: true, email: true } },
-      _count: { select: { Orders: { where: { status: "PAID" } }, Reviews: true } },
+      _count: { select: { Orders: { where: { status: { notIn: ["EXPIRED", "REJECTED", "CANCELLED"] } } }, Reviews: true } },
     },
   });
 

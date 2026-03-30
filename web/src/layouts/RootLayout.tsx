@@ -5,7 +5,7 @@ import { Toaster } from "sonner";
 export default function RootLayout() {
   return (
     <div className="min-h-screen bg-zinc-900">
-      <Toaster position="top-right" richColors />
+      <Toaster position="bottom-right" richColors />
       <Header />
       <Outlet />
       <footer className="border-t border-zinc-700 bg-zinc-800 py-8 text-center text-sm text-zinc-400">
