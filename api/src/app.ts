@@ -26,7 +26,12 @@ const PORT: number = Number(process.env.PORT) || 3000;
 // Global middleware
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://event-management-mini-project-mto2.vercel.app",
+      "https://event-master-mini-project-mto2.vercel.app",
+      ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim()) : []),
+    ],
     credentials: true,
   }),
 );
