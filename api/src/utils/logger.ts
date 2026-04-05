@@ -1,38 +1,37 @@
 import path from "node:path";
 import fs from "node:fs/promises";
-import { error, timeStamp, warn } from "node:console";
 
 export async function writeLog({
   level,
   message,
-  meta,
 }: {
   level: "info" | "warn" | "error";
   message: string;
   meta?: { timestamp: string };
 }) {
   const log = { level, message, meta: { timestamp: new Date().toISOString() } };
-  const combinedLogPath = path.join(process.cwd(), "logger", "combined.log");
-  const errorLogPath = path.join(process.cwd(), "logger", "error.log");
-  const warnLogPath = path.join(process.cwd(), "logger", "warn.log");
-  const infoLogPath = path.join(process.cwd(), "logger", "info.log");
+  const logStr = JSON.stringify(log, null, 2);
 
-  //all log
-  await fs.appendFile(combinedLogPath, JSON.stringify(log, null, 2));
+  // Always print to console (visible in Railway logs)
+  if (level === "error") console.error(logStr);
+  else if (level === "warn") console.warn(logStr);
+  else console.log(logStr);
 
-  //error log
-  if (level === "error") {
-    await fs.appendFile(errorLogPath, JSON.stringify(log, null, 2));
-  }
-  //warn log
-  if (level === "warn") {
-    await fs.appendFile(warnLogPath, JSON.stringify(log, null, 2));
-  }
+  // Write to files only if not in production (Railway filesystem is ephemeral)
+  if (process.env["NODE_ENV"] === "production") return;
 
-  //info log
-  if (level === "info") {
-    await fs.appendFile(infoLogPath, JSON.stringify(log, null, 2));
-  }
+  const logDir = path.join(process.cwd(), "logger");
+  await fs.mkdir(logDir, { recursive: true });
+
+  const combinedLogPath = path.join(logDir, "combined.log");
+  const errorLogPath = path.join(logDir, "error.log");
+  const warnLogPath = path.join(logDir, "warn.log");
+  const infoLogPath = path.join(logDir, "info.log");
+
+  await fs.appendFile(combinedLogPath, logStr);
+  if (level === "error") await fs.appendFile(errorLogPath, logStr);
+  if (level === "warn") await fs.appendFile(warnLogPath, logStr);
+  if (level === "info") await fs.appendFile(infoLogPath, logStr);
 }
 
 export const logger = {
