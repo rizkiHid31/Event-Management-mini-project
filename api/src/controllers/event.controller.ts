@@ -8,6 +8,8 @@ import {
   deleteEventService,
   getOrganizerEventsService,
   getOrganizerStatsService,
+  getOrganizerChartService,
+  getEventAttendeesService,
 } from "../services/event.service.js";
 
 export async function createEventController(
@@ -97,6 +99,29 @@ export async function getOrganizerStatsController(
   try {
     const stats = await getOrganizerStatsService(req.user!.id);
     res.status(200).json({ data: stats });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getOrganizerChartController(
+  req: Request, res: Response, next: NextFunction,
+) {
+  try {
+    const groupBy = (req.query.groupBy as string) || "month";
+    const data = await getOrganizerChartService(req.user!.id, groupBy);
+    res.status(200).json({ data });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getEventAttendeesController(
+  req: Request, res: Response, next: NextFunction,
+) {
+  try {
+    const attendees = await getEventAttendeesService(Number(req.params.eventId), req.user!.id);
+    res.status(200).json({ data: attendees });
   } catch (error) {
     next(error);
   }

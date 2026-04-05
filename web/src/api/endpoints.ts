@@ -2,6 +2,8 @@ export const API_ENDPOINTS = {
   AUTH: {
     REGISTER: "/auth/register",
     LOGIN: "/auth/login",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
   },
   EVENTS: {
     LIST: "/events",
@@ -12,6 +14,8 @@ export const API_ENDPOINTS = {
     DELETE: (id: number) => `/events/${id}`,
     MY_EVENTS: "/events/organizer/my-events",
     STATS: "/events/organizer/stats",
+    CHART: "/events/organizer/chart",
+    ATTENDEES: (eventId: number) => `/events/${eventId}/attendees`,
   },
   ORDERS: {
     CREATE: "/orders",
@@ -30,6 +34,7 @@ export const API_ENDPOINTS = {
     PROFILE: "/users/profile",
     UPDATE_PROFILE: "/users/profile",
     UPLOAD_AVATAR: "/users/profile/avatar",
+    CHANGE_PASSWORD: "/users/profile/password",
   },
   VOUCHERS: {
     CREATE: "/vouchers",

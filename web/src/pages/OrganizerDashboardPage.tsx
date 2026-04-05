@@ -8,10 +8,16 @@ import { formatCurrency, formatDate, CATEGORY_EMOJI } from "@/lib/format";
 import Spinner from "@/components/Spinner";
 import EmptyState from "@/components/EmptyState";
 
+type GroupBy = "day" | "month" | "year";
+interface ChartPoint { period: string; orders: number; revenue: number; tickets: number }
+
 export default function OrganizerDashboardPage() {
   const [stats, setStats] = useState<OrganizerStats | null>(null);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState<ChartPoint[]>([]);
+  const [groupBy, setGroupBy] = useState<GroupBy>("month");
+  const [chartMetric, setChartMetric] = useState<"revenue" | "orders">("revenue");
 
   useEffect(() => {
     Promise.all([
@@ -25,6 +31,13 @@ export default function OrganizerDashboardPage() {
       .catch(() => toast.error("Failed to load dashboard"))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    apiClient
+      .get(API_ENDPOINTS.EVENTS.CHART, { params: { groupBy } })
+      .then(({ data }) => setChartData(data.data))
+      .catch(() => {});
+  }, [groupBy]);
 
   async function handleDelete(eventId: number, title: string) {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
@@ -129,53 +142,84 @@ export default function OrganizerDashboardPage() {
         </div>
       )}
 
-      {/* Revenue bar chart (simple CSS-only) */}
-      {events.length > 0 && (
-        <div className="mt-8 rounded-xl border border-zinc-700 bg-zinc-800 p-6">
-          <h2 className="text-sm font-bold text-zinc-100">
-            Revenue by Event
-          </h2>
-          <div className="mt-4 space-y-3">
-            {events
-              .sort(
-                (a, b) =>
-                  (b._count?.Orders || 0) - (a._count?.Orders || 0),
-              )
-              .slice(0, 5)
-              .map((event) => {
-                const maxOrders = Math.max(
-                  ...events.map((e) => e._count?.Orders || 0),
-                  1,
-                );
-                const pct = ((event._count?.Orders || 0) / maxOrders) * 100;
-
-                return (
-                  <div key={event.id} className="flex items-center gap-3">
-                    <span className="w-6 text-center text-lg">
-                      {CATEGORY_EMOJI[event.category] || "✨"}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p className="truncate text-sm font-medium text-zinc-100">
-                          {event.title}
-                        </p>
-                        <p className="flex-shrink-0 text-xs text-zinc-500">
-                          {event._count?.Orders || 0} orders
-                        </p>
-                      </div>
-                      <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-zinc-700">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-700"
-                          style={{ width: `${Math.max(pct, 4)}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+      {/* Statistics Visualization Chart */}
+      <div className="mt-8 rounded-xl border border-zinc-700 bg-zinc-800 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-bold text-zinc-100">Statistics</h2>
+          <div className="flex gap-2">
+            {/* Metric toggle */}
+            <div className="flex overflow-hidden rounded-lg border border-zinc-700">
+              {(["revenue", "orders"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setChartMetric(m)}
+                  className={`px-3 py-1.5 text-xs font-medium transition ${
+                    chartMetric === m
+                      ? "bg-violet-600 text-white"
+                      : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {m === "revenue" ? "Revenue" : "Orders"}
+                </button>
+              ))}
+            </div>
+            {/* GroupBy toggle */}
+            <div className="flex overflow-hidden rounded-lg border border-zinc-700">
+              {(["day", "month", "year"] as const).map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setGroupBy(g)}
+                  className={`px-3 py-1.5 text-xs font-medium capitalize transition ${
+                    groupBy === g
+                      ? "bg-violet-600 text-white"
+                      : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      )}
+
+        {chartData.length === 0 ? (
+          <p className="mt-6 text-center text-sm text-zinc-500">No order data yet.</p>
+        ) : (() => {
+          const maxVal = Math.max(...chartData.map((d) => chartMetric === "revenue" ? d.revenue : d.orders), 1);
+          return (
+            <div className="mt-5">
+              {/* Bar chart */}
+              <div className="flex items-end gap-1.5 overflow-x-auto pb-2" style={{ minHeight: 160 }}>
+                {chartData.map((d) => {
+                  const val = chartMetric === "revenue" ? d.revenue : d.orders;
+                  const pct = (val / maxVal) * 140;
+                  return (
+                    <div key={d.period} className="group flex min-w-[36px] flex-1 flex-col items-center gap-1">
+                      {/* Tooltip */}
+                      <div className="invisible mb-1 rounded bg-zinc-700 px-2 py-1 text-center text-xs text-zinc-200 group-hover:visible">
+                        {chartMetric === "revenue" ? formatCurrency(d.revenue) : `${d.orders} orders`}
+                        <br />
+                        <span className="text-zinc-400">{d.tickets} tickets</span>
+                      </div>
+                      <div
+                        className="w-full rounded-t-md bg-gradient-to-t from-violet-700 to-violet-500 transition-all duration-500"
+                        style={{ height: `${Math.max(pct, 4)}px` }}
+                      />
+                      <p className="w-full truncate text-center text-[10px] text-zinc-500">{d.period}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Summary row */}
+              <div className="mt-3 flex flex-wrap gap-4 border-t border-zinc-700 pt-3 text-xs text-zinc-400">
+                <span>Total orders: <strong className="text-zinc-100">{chartData.reduce((s, d) => s + d.orders, 0)}</strong></span>
+                <span>Total tickets: <strong className="text-zinc-100">{chartData.reduce((s, d) => s + d.tickets, 0)}</strong></span>
+                <span>Total revenue: <strong className="text-emerald-400">{formatCurrency(chartData.reduce((s, d) => s + d.revenue, 0))}</strong></span>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
 
       {/* My Events */}
       <div className="mt-8 flex items-center justify-between">
@@ -250,6 +294,12 @@ export default function OrganizerDashboardPage() {
                       {event._count?.Reviews || 0} reviews
                     </p>
                   </div>
+                  <Link
+                    to={`/organizer/event/${event.id}/attendees`}
+                    className="rounded-lg border border-sky-700 px-3 py-1.5 text-xs font-medium text-sky-400 transition hover:bg-sky-900/40"
+                  >
+                    Attendees
+                  </Link>
                   <Link
                     to={`/organizer/event/edit/${event.id}`}
                     className="rounded-lg border border-violet-700 px-3 py-1.5 text-xs font-medium text-violet-400 transition hover:bg-violet-900/40"

@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "node:crypto";
 
 import { registerSchema, loginSchema } from "../validations/auth.validation.js";
 import { prisma } from "../lib/prisma.js";
+import { redis } from "../lib/redis.js";
 import { AppError } from "../utils/app-error.js";
 import { sendEmail } from "../utils/email.js";
 
@@ -79,6 +81,36 @@ export async function registerService(userInput: Record<string, unknown>) {
   // Don't return password
   const { password: _, ...safeUser } = userData;
   return safeUser;
+}
+
+export async function forgotPasswordService(email: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return; // Silent — don't reveal whether email exists
+
+  const token = crypto.randomBytes(32).toString("hex");
+  await redis.set(`pwd_reset:${token}`, String(user.id), "EX", 3600);
+
+  const resetLink = `${process.env.FRONTEND_URL || "http://localhost:5173"}/auth/reset-password?token=${token}`;
+
+  sendEmail({
+    from: "noreply@rizkihidayat.my.id",
+    to: email,
+    subject: "Reset your Master Event password",
+    template: "password-reset",
+    emailData: { name: user.name, resetLink },
+  }).catch(() => {});
+}
+
+export async function resetPasswordService(token: string, newPassword: string) {
+  const userId = await redis.get(`pwd_reset:${token}`);
+  if (!userId) throw new AppError("Invalid or expired reset link", 400);
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await (prisma.user as any).update({
+    where: { id: Number(userId) },
+    data: { password: hashed },
+  });
+  await redis.del(`pwd_reset:${token}`);
 }
 
 export async function loginService(userInput: {

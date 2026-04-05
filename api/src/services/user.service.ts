@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import bcrypt from "bcryptjs";
 import { cloudinary } from "../lib/cloudinery.js";
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/app-error.js";
@@ -55,6 +56,21 @@ export async function updateUserProfileService(
       bio: true,
     },
   });
+}
+
+export async function changePasswordService(
+  userId: number,
+  currentPassword: string,
+  newPassword: string,
+) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError("User not found", 404);
+
+  const isValid = await bcrypt.compare(currentPassword, user.password);
+  if (!isValid) throw new AppError("Current password is incorrect", 400);
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({ where: { id: userId }, data: { password: hashed } });
 }
 
 export async function uploadAvatarService(

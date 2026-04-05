@@ -17,6 +17,9 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", bio: "" });
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [changingPwd, setChangingPwd] = useState(false);
+  const [savingPwd, setSavingPwd] = useState(false);
+  const [pwdForm, setPwdForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
 
   useEffect(() => {
     apiClient
@@ -50,6 +53,27 @@ export default function ProfilePage() {
     } finally {
       setUploadingAvatar(false);
       if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  }
+
+  async function handleChangePassword() {
+    if (pwdForm.newPassword !== pwdForm.confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    setSavingPwd(true);
+    try {
+      await apiClient.put(API_ENDPOINTS.USERS.CHANGE_PASSWORD, {
+        currentPassword: pwdForm.currentPassword,
+        newPassword: pwdForm.newPassword,
+      });
+      toast.success("Password changed!");
+      setChangingPwd(false);
+      setPwdForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to change password");
+    } finally {
+      setSavingPwd(false);
     }
   }
 
@@ -291,6 +315,58 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Change Password */}
+        <div className="border-t border-zinc-700 px-8 py-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-zinc-100">Password</h2>
+            {!changingPwd ? (
+              <button
+                onClick={() => setChangingPwd(true)}
+                className="text-sm font-medium text-violet-600 hover:underline"
+              >
+                Change
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setChangingPwd(false); setPwdForm({ currentPassword: "", newPassword: "", confirmPassword: "" }); }}
+                  className="text-sm text-zinc-500 hover:underline"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleChangePassword}
+                  disabled={savingPwd}
+                  className="rounded-lg bg-violet-600 px-3 py-1 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50"
+                >
+                  {savingPwd ? "Saving..." : "Save"}
+                </button>
+              </div>
+            )}
+          </div>
+          {changingPwd ? (
+            <div className="mt-4 space-y-3">
+              {[
+                { label: "Current Password", key: "currentPassword" },
+                { label: "New Password", key: "newPassword" },
+                { label: "Confirm New Password", key: "confirmPassword" },
+              ].map(({ label, key }) => (
+                <div key={key}>
+                  <label className="block text-xs font-medium text-zinc-500">{label}</label>
+                  <input
+                    type="password"
+                    value={pwdForm[key as keyof typeof pwdForm]}
+                    onChange={(e) => setPwdForm((p) => ({ ...p, [key]: e.target.value }))}
+                    className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-900"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-1 text-sm text-zinc-500">••••••••</p>
+          )}
         </div>
       </div>
     </main>

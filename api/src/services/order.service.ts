@@ -278,7 +278,7 @@ export async function confirmOrderService(orderId: number, organizerId: number) 
     console.log("[confirmOrder] points credited:", pointsEarned, "to userId:", order.customerId);
   }
 
-  return (prisma.order as any).update({
+  const updatedOrder = await (prisma.order as any).update({
     where: { id: orderId },
     data: { status: "DONE" },
     include: {
@@ -286,6 +286,29 @@ export async function confirmOrderService(orderId: number, organizerId: number) 
       Customer: { select: { name: true, email: true } },
     },
   });
+
+  const fmt = (n: number) =>
+    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
+  const total = Number(updatedOrder.totalAmount);
+  const qty = updatedOrder.quantity;
+
+  sendEmail({
+    from: "noreply@rizkihidayat.my.id",
+    to: updatedOrder.Customer.email,
+    subject: `Order Confirmed — ${updatedOrder.Event.title}`,
+    template: "order-confirmation",
+    emailData: {
+      name: updatedOrder.Customer.name,
+      eventTitle: updatedOrder.Event.title,
+      eventDate: new Date(updatedOrder.Event.startDate).toLocaleDateString("id-ID", { dateStyle: "long" }),
+      eventLocation: updatedOrder.Event.location,
+      quantity: qty,
+      price: fmt(qty > 0 ? total / qty : total),
+      total: fmt(total),
+    },
+  }).catch(() => {});
+
+  return updatedOrder;
 }
 
 export async function rejectOrderService(orderId: number, organizerId: number) {
@@ -293,7 +316,10 @@ export async function rejectOrderService(orderId: number, organizerId: number) {
 
   const order = await orderModel.findUnique({
     where: { id: orderId },
-    include: { Event: true },
+    include: {
+      Event: true,
+      Customer: { select: { name: true, email: true } },
+    },
   });
 
   if (!order) throw new AppError("Order not found", 404);
@@ -331,7 +357,15 @@ export async function rejectOrderService(orderId: number, organizerId: number) {
     logger.info(`[rejectOrder] no wallet update needed`);
   }
 
-  return (prisma.order as any).update({
+  // Refund voucher usage
+  if (order.voucherId) {
+    await (prisma.voucher as any).update({
+      where: { id: order.voucherId },
+      data: { usedCount: { decrement: 1 } },
+    });
+  }
+
+  const rejectedOrder = await (prisma.order as any).update({
     where: { id: orderId },
     data: { status: "REJECTED" },
     include: {
@@ -339,6 +373,25 @@ export async function rejectOrderService(orderId: number, organizerId: number) {
       Customer: { select: { name: true, email: true } },
     },
   });
+
+  const fmt = (n: number) =>
+    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
+
+  sendEmail({
+    from: "noreply@rizkihidayat.my.id",
+    to: order.Customer.email,
+    subject: `Order Rejected — ${order.Event.title}`,
+    template: "order-rejected",
+    emailData: {
+      name: order.Customer.name,
+      eventTitle: order.Event.title,
+      total: fmt(totalAmount),
+      refundAmount: isTransfer && totalAmount > 0 ? fmt(totalAmount) : null,
+      pointsRefunded: order.pointsUsed > 0 ? order.pointsUsed.toLocaleString("id-ID") : null,
+    },
+  }).catch(() => {});
+
+  return rejectedOrder;
 }
 
 export async function getOrganizerOrdersService(organizerId: number, status?: string) {

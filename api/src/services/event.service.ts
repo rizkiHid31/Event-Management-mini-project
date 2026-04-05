@@ -285,6 +285,50 @@ export async function getOrganizerEventsService(organizerId: number) {
   });
 }
 
+export async function getOrganizerChartService(organizerId: number, groupBy = "month") {
+  const orders = await (prisma.order as any).findMany({
+    where: {
+      Event: { organizerId },
+      status: { in: ["DONE", "PAID", "WAITING_CONFIRMATION"] },
+    },
+    select: { createdAt: true, totalAmount: true, quantity: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const map = new Map<string, { orders: number; revenue: number; tickets: number }>();
+
+  for (const o of orders) {
+    const d = new Date(o.createdAt);
+    let key: string;
+    if (groupBy === "year") {
+      key = `${d.getFullYear()}`;
+    } else if (groupBy === "day") {
+      key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    } else {
+      key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    }
+    const entry = map.get(key) ?? { orders: 0, revenue: 0, tickets: 0 };
+    entry.orders += 1;
+    entry.revenue += Number(o.totalAmount);
+    entry.tickets += o.quantity;
+    map.set(key, entry);
+  }
+
+  return Array.from(map.entries()).map(([period, data]) => ({ period, ...data }));
+}
+
+export async function getEventAttendeesService(eventId: number, organizerId: number) {
+  const event = await (prisma.event as any).findUnique({ where: { id: eventId, deletedAt: null } });
+  if (!event) throw new AppError("Event not found", 404);
+  if (event.organizerId !== organizerId) throw new AppError("Forbidden", 403);
+
+  return (prisma.order as any).findMany({
+    where: { eventId, status: { in: ["DONE", "PAID", "WAITING_CONFIRMATION"] } },
+    include: { Customer: { select: { id: true, name: true, email: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function getOrganizerStatsService(organizerId: number) {
   const eventModel = prisma.event as any;
   const reviewModel = prisma as any;

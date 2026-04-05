@@ -8,6 +8,8 @@ import {
   deleteEventController,
   getOrganizerEventsController,
   getOrganizerStatsController,
+  getOrganizerChartController,
+  getEventAttendeesController,
 } from "../controllers/event.controller.js";
 import { upload } from "../middlewares/upload.middleware.js";
 import { roleGuard, verifyToken } from "../middlewares/auth.middleware.js";
@@ -23,6 +25,8 @@ router.get("/id/:id", getEventByIdController);
 router.use(verifyToken);
 router.get("/organizer/my-events", roleGuard("ORGANIZER"), getOrganizerEventsController);
 router.get("/organizer/stats", roleGuard("ORGANIZER"), getOrganizerStatsController);
+router.get("/organizer/chart", roleGuard("ORGANIZER"), getOrganizerChartController);
+router.get("/:eventId/attendees", roleGuard("ORGANIZER"), getEventAttendeesController);
 router.post("/", roleGuard("ORGANIZER"), upload.single("image"), createEventController);
 router.put("/:id", roleGuard("ORGANIZER"), upload.single("image"), updateEventController);
 router.delete("/:id", roleGuard("ORGANIZER"), deleteEventController);

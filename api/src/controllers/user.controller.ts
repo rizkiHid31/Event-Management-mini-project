@@ -3,6 +3,7 @@ import {
   getUserProfileService,
   updateUserProfileService,
   uploadAvatarService,
+  changePasswordService,
 } from "../services/user.service.js";
 
 export async function getUserProfileController(
@@ -22,6 +23,18 @@ export async function updateUserProfileController(
   try {
     const user = await updateUserProfileService(req.user!.id, req.body);
     res.status(200).json({ message: "Profile updated", data: user });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function changePasswordController(
+  req: Request, res: Response, next: NextFunction,
+) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    await changePasswordService(req.user!.id, currentPassword, newPassword);
+    res.status(200).json({ message: "Password changed successfully" });
   } catch (error) {
     next(error);
   }

@@ -25,6 +25,9 @@ import CustomerOrdersPage from "./pages/CustomerOrdersPage";
 import TicketPage from "./pages/TicketPage";
 import WalletPage from "./pages/WalletPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import AttendeeListPage from "./pages/AttendeeListPage";
 
 export default function App() {
   return (
@@ -40,6 +43,8 @@ export default function App() {
           <Route element={<GuestRoute />}>
             <Route path="auth/login" element={<LoginPage />} />
             <Route path="auth/register" element={<RegisterPage />} />
+            <Route path="auth/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="auth/reset-password" element={<ResetPasswordPage />} />
           </Route>
 
           {/* Authenticated */}
@@ -74,6 +79,10 @@ export default function App() {
               <Route
                 path="organizer/orders"
                 element={<OrganizerOrdersPage />}
+              />
+              <Route
+                path="organizer/event/:eventId/attendees"
+                element={<AttendeeListPage />}
               />
             </Route>
           </Route>
