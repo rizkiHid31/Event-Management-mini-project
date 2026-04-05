@@ -4,6 +4,7 @@ import { cloudinary } from "../lib/cloudinery.js";
 import { AppError } from "../utils/app-error.js";
 import { createOrderSchema } from "../validations/order.validation.js";
 import { sendEmail } from "../utils/email.js";
+import { logger } from "../utils/logger.js";
 
 export async function createOrderService(
   customerId: number,
@@ -302,31 +303,41 @@ export async function rejectOrderService(orderId: number, organizerId: number) {
   }
 
   const totalAmount = Number(order.totalAmount);
+  const isTransfer = order.paymentMethod === "TRANSFER";
 
-  return prisma.$transaction(async (tx: any) => {
-    // Refund points if used
-    if (order.pointsUsed > 0) {
-      await tx.wallet.update({
+  logger.info(`[rejectOrder] orderId=${orderId} paymentMethod=${order.paymentMethod} totalAmount=${totalAmount} pointsUsed=${order.pointsUsed} customerId=${order.customerId}`);
+
+  // Build single wallet update to avoid double-hit on same row
+  const walletRefund: Record<string, any> = {};
+  if (isTransfer && totalAmount > 0) walletRefund.balance = { increment: totalAmount };
+  if (order.pointsUsed > 0) walletRefund.points = { increment: order.pointsUsed };
+
+  logger.info(`[rejectOrder] walletRefund=${JSON.stringify(walletRefund)}`);
+
+  const walletModel = prisma.wallet as any;
+
+  if (Object.keys(walletRefund).length > 0) {
+    try {
+      await walletModel.update({
         where: { userId: order.customerId },
-        data: { points: { increment: order.pointsUsed } },
+        data: walletRefund,
       });
+      logger.info(`[rejectOrder] wallet updated OK for customerId=${order.customerId}`);
+    } catch (err: any) {
+      logger.error(`[rejectOrder] wallet update FAILED: ${err.message}`);
+      throw err;
     }
+  } else {
+    logger.info(`[rejectOrder] no wallet update needed`);
+  }
 
-    // Refund customer wallet (no balance was deducted in current flow, but kept for safety)
-    await tx.wallet.upsert({
-      where: { userId: order.customerId },
-      update: { balance: { increment: 0 } }, // no balance deducted
-      create: { userId: order.customerId, balance: 0 },
-    });
-
-    return tx.order.update({
-      where: { id: orderId },
-      data: { status: "REJECTED" },
-      include: {
-        Event: { select: { id: true, title: true, startDate: true, location: true } },
-        Customer: { select: { name: true, email: true } },
-      },
-    });
+  return (prisma.order as any).update({
+    where: { id: orderId },
+    data: { status: "REJECTED" },
+    include: {
+      Event: { select: { id: true, title: true, startDate: true, location: true } },
+      Customer: { select: { name: true, email: true } },
+    },
   });
 }
 
