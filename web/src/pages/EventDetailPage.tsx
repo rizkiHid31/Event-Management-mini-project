@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useEventDetail } from "@/hooks/useEvents";
 import { useAuthStore } from "@/store/auth.store";
@@ -19,8 +19,17 @@ export default function EventDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { event, loading, error } = useEventDetail(slug!);
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, updateUser } = useAuthStore();
   const [ordering, setOrdering] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      apiClient
+        .get(API_ENDPOINTS.USERS.PROFILE)
+        .then(({ data }) => updateUser(data.data))
+        .catch(() => {});
+    }
+  }, [isAuthenticated]);
   const [quantity, setQuantity] = useState(1);
   const [showReview, setShowReview] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");

@@ -24,9 +24,9 @@ export default function Header() {
           className="flex items-center gap-2 text-xl font-bold tracking-tight text-zinc-100"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-sm font-black text-white">
-            RE
+            ME
           </span>
-          <span className="hidden sm:inline">Raja Event</span>
+          <span className="hidden sm:inline">Master Event</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
