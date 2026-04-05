@@ -27,3 +27,6 @@ desktop.ini
 # Temp
 *.tmp
 *.temp
+node_modules/
+dist/
+.env
