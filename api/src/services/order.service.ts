@@ -106,7 +106,7 @@ export async function createOrderService(
     ? 0
     : Math.max(0, baseAmount - discountAmount - actualPointsUsed);
 
-  const orderStatus = paymentMethod === "TRANSFER" ? "WAITING_PAYMENT" : "DONE";
+  const orderStatus = (paymentMethod === "TRANSFER" && totalAmount > 0) ? "WAITING_PAYMENT" : "DONE";
 
   const order = await (prisma.$transaction as any)(async (tx: any) => {
     // Deduct points for TRANSFER + points toggle

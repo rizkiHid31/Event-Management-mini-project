@@ -89,7 +89,9 @@ export default function EventDetailPage() {
         paymentMethod,
       });
       toast.success(
-        paymentMethod === "TRANSFER"
+        event!.isFree
+          ? "Registered! Your ticket is ready."
+          : paymentMethod === "TRANSFER"
           ? "Order created! Upload your payment proof."
           : "Payment successful! Your ticket is ready."
       );
