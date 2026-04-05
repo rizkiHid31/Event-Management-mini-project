@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import {
   getUserProfileService,
   updateUserProfileService,
+  uploadAvatarService,
 } from "../services/user.service.js";
 
 export async function getUserProfileController(
@@ -21,6 +22,18 @@ export async function updateUserProfileController(
   try {
     const user = await updateUserProfileService(req.user!.id, req.body);
     res.status(200).json({ message: "Profile updated", data: user });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function uploadAvatarController(
+  req: Request, res: Response, next: NextFunction,
+) {
+  try {
+    if (!req.file) throw new Error("No file uploaded");
+    const user = await uploadAvatarService(req.user!.id, req.file);
+    res.status(200).json({ message: "Avatar updated", data: user });
   } catch (error) {
     next(error);
   }

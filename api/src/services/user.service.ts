@@ -1,3 +1,5 @@
+import fs from "fs/promises";
+import { cloudinary } from "../lib/cloudinery.js";
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/app-error.js";
 
@@ -42,6 +44,37 @@ export async function updateUserProfileService(
   return (prisma.user as any).update({
     where: { id: userId },
     data,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      referralCode: true,
+      avatar: true,
+      phone: true,
+      bio: true,
+    },
+  });
+}
+
+export async function uploadAvatarService(
+  userId: number,
+  file: Express.Multer.File,
+) {
+  let avatarUrl: string;
+  try {
+    const result = await cloudinary.uploader.upload(file.path, {
+      folder: "avatars",
+      transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }],
+    });
+    avatarUrl = result.secure_url;
+  } finally {
+    await fs.unlink(file.path).catch(() => {});
+  }
+
+  return (prisma.user as any).update({
+    where: { id: userId },
+    data: { avatar: avatarUrl },
     select: {
       id: true,
       name: true,

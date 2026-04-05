@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Event Management - Project Structure</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* Architecture overview */
+    .arch {
+      display: flex;
+      align-items: stretch;
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto 2.5rem auto;
+    }
+    .arch-box {
+      flex: 1;
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid;
+    }
+    .arch-box.frontend {
+      background: #0c1a35;
+      border-color: #1d4ed8;
+    }
+    .arch-box.backend {
+      background: #0c2a1e;
+      border-color: #15803d;
+    }
+    .arch-box.db {
+      background: #1e1226;
+      border-color: #7e22ce;
+      flex: 0 0 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+    }
+    .arch-box.db .db-icon {
+      font-size: 2.5rem;
+    }
+    .arch-box h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .arch-box.frontend h2 { color: #60a5fa; }
+    .arch-box.backend h2 { color: #4ade80; }
+    .arch-box.db h2 { color: #c084fc; font-size: 0.9rem; text-align: center; }
+
+    .arrow-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      flex: 0 0 50px;
+    }
+    .arrow {
+      font-size: 1.5rem;
+      color: #475569;
+    }
+    .arrow-label {
+      font-size: 0.6rem;
+      color: #475569;
+      text-align: center;
+    }
+
+    /* Layer rows */
+    .layers { display: flex; flex-direction: column; gap: 0.6rem; }
+    .layer {
+      border-radius: 10px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.78rem;
+    }
+
+    /* Frontend layers */
+    .layer.pages    { background: #1e3a8a22; border: 1px solid #1e3a8a; }
+    .layer.routes   { background: #1d4ed822; border: 1px solid #2563eb; }
+    .layer.comps    { background: #0369a122; border: 1px solid #0284c7; }
+    .layer.hooks    { background: #0e7490aa; border: 1px solid #0891b2; background: #06404a33; }
+    .layer.store    { background: #155e7533; border: 1px solid #0e7490; }
+    .layer.api-layer{ background: #16325233; border: 1px solid #1e40af; }
+
+    /* Backend layers */
+    .layer.b-routes { background: #14532d22; border: 1px solid #16a34a; }
+    .layer.b-ctrl   { background: #15803d22; border: 1px solid #22c55e; }
+    .layer.b-svc    { background: #166534aa; background: #1a5c3633; border: 1px solid #4ade80; }
+    .layer.b-mid    { background: #92400e33; border: 1px solid #d97706; }
+    .layer.b-queue  { background: #7c2d1233; border: 1px solid #ea580c; }
+    .layer.b-lib    { background: #1c1c4433; border: 1px solid #6366f1; }
+    .layer.b-util   { background: #27272a33; border: 1px solid #52525b; }
+
+    .layer-title {
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.35rem;
+    }
+    .layer-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+    .chip {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 500;
+    }
+    .chip.blue   { background: #1e40af55; color: #93c5fd; border: 1px solid #1d4ed8; }
+    .chip.sky    { background: #0369a155; color: #7dd3fc; border: 1px solid #0284c7; }
+    .chip.teal   { background: #0f766e55; color: #5eead4; border: 1px solid #0d9488; }
+    .chip.green  { background: #15803d55; color: #86efac; border: 1px solid #16a34a; }
+    .chip.lime   { background: #3f6212aa; color: #bef264; border: 1px solid #65a30d; background: #3a5a1033; }
+    .chip.orange { background: #9a3412aa; color: #fdba74; border: 1px solid #ea580c; background: #7c2d1233; }
+    .chip.amber  { background: #78350f55; color: #fcd34d; border: 1px solid #d97706; }
+    .chip.violet { background: #4c1d9555; color: #c4b5fd; border: 1px solid #7c3aed; }
+    .chip.gray   { background: #37415155; color: #d1d5db; border: 1px solid #4b5563; }
+    .chip.rose   { background: #9f123855; color: #fda4af; border: 1px solid #e11d48; }
+
+    /* DB tables */
+    .db-tables { display: flex; flex-direction: column; gap: 0.4rem; width: 100%; }
+    .db-table {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #2e1065aa;
+      border: 1px solid #6d28d9;
+      border-radius: 6px;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.72rem;
+      color: #ddd6fe;
+    }
+    .db-table .icon { font-size: 0.9rem; }
+
+    /* Flow diagram */
+    .flow-section {
+      max-width: 1200px;
+      margin: 0 auto 2.5rem auto;
+    }
+    .flow-section h3 {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid #38bdf8;
+    }
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      border: 1px solid #334155;
+    }
+    .flow-node {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    .flow-arrow {
+      color: #475569;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .fn-client  { background: #1e3a8a; color: #bfdbfe; border: 1px solid #3b82f6; }
+    .fn-route   { background: #14532d; color: #bbf7d0; border: 1px solid #22c55e; }
+    .fn-mid     { background: #78350f; color: #fde68a; border: 1px solid #f59e0b; }
+    .fn-ctrl    { background: #1e3a8a55; color: #93c5fd; border: 1px solid #2563eb; }
+    .fn-svc     { background: #15803d55; color: #86efac; border: 1px solid #4ade80; }
+    .fn-prisma  { background: #4c1d95; color: #ddd6fe; border: 1px solid #8b5cf6; }
+    .fn-db      { background: #1e1226; color: #c084fc; border: 1px solid #7e22ce; }
+    .fn-redis   { background: #7c1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+    .fn-queue   { background: #431407; color: #fdba74; border: 1px solid #f97316; }
+
+    /* Tech stack */
+    .tech-section {
+      max-width: 1200px;
+      margin: 0 auto 2rem auto;
+    }
+    .tech-section h3 {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid #818cf8;
+    }
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.6rem;
+    }
+    .tech-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+    }
+    .tech-card .icon { font-size: 1.2rem; }
+    .tech-card .name { font-weight: 600; color: #e2e8f0; }
+    .tech-card .cat  { font-size: 0.62rem; color: #64748b; }
+
+    /* Tree */
+    .tree-section {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .tree-section h3 {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid #4ade80;
+    }
+    .tree-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .tree-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 1.2rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.72rem;
+      line-height: 1.8;
+    }
+    .tree-box h4 {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .tree-box h4.fe { color: #60a5fa; }
+    .tree-box h4.be { color: #4ade80; }
+    .d { color: #60a5fa; font-weight: 600; }
+    .f { color: #94a3b8; }
+    .fi { color: #818cf8; }
+    .fc { color: #4ade80; }
+    .fp { color: #f472b6; }
+    .fh { color: #fb923c; }
+    .prefix { color: #334155; }
+  </style>
+</head>
+<body>
+
+<h1>Event Management — Project Structure</h1>
+<p class="subtitle">Full-stack app · React + Vite (Frontend) · Express + Prisma (Backend) · PostgreSQL</p>
+
+<!-- Architecture Boxes -->
+<div class="arch">
+
+  <!-- FRONTEND -->
+  <div class="arch-box frontend">
+    <h2>🌐 Frontend <span style="color:#334155;font-weight:400;font-size:0.8rem">web/</span></h2>
+    <div class="layers">
+      <div class="layer pages">
+        <div class="layer-title" style="color:#93c5fd">Pages</div>
+        <div class="layer-items">
+          <span class="chip blue">HomePage</span>
+          <span class="chip blue">EventsPage</span>
+          <span class="chip blue">EventDetailPage</span>
+          <span class="chip blue">CreateEventPage</span>
+          <span class="chip blue">EditEventPage</span>
+          <span class="chip blue">LoginPage</span>
+          <span class="chip blue">RegisterPage</span>
+          <span class="chip blue">ProfilePage</span>
+          <span class="chip blue">OrganizerDashboard</span>
+          <span class="chip blue">OrganizerOrders</span>
+          <span class="chip blue">CustomerOrders</span>
+          <span class="chip blue">TicketPage</span>
+          <span class="chip blue">VouchersPage</span>
+          <span class="chip blue">WalletPage</span>
+          <span class="chip blue">NotFoundPage</span>
+        </div>
+      </div>
+      <div class="layer routes">
+        <div class="layer-title" style="color:#7dd3fc">Route Guards</div>
+        <div class="layer-items">
+          <span class="chip sky">AuthRoute</span>
+          <span class="chip sky">GuestRoute</span>
+          <span class="chip sky">CustomerRoute</span>
+          <span class="chip sky">OrganizerRoute</span>
+        </div>
+      </div>
+      <div class="layer comps">
+        <div class="layer-title" style="color:#7dd3fc">Components</div>
+        <div class="layer-items">
+          <span class="chip sky">Header</span>
+          <span class="chip sky">EventCard</span>
+          <span class="chip sky">ReviewForm</span>
+          <span class="chip sky">WriteReviewModal</span>
+          <span class="chip sky">StatusBadge</span>
+          <span class="chip sky">EmptyState</span>
+          <span class="chip sky">LoadingSpinner</span>
+          <span class="chip teal">Button</span>
+          <span class="chip teal">Card</span>
+          <span class="chip teal">Input</span>
+          <span class="chip teal">Label</span>
+          <span class="chip teal">Sonner</span>
+        </div>
+      </div>
+      <div class="layer hooks">
+        <div class="layer-title" style="color:#5eead4">Hooks</div>
+        <div class="layer-items">
+          <span class="chip teal">useEvents</span>
+          <span class="chip teal">useOrders</span>
+          <span class="chip teal">useDebounce</span>
+        </div>
+      </div>
+      <div class="layer store">
+        <div class="layer-title" style="color:#5eead4">State (Zustand)</div>
+        <div class="layer-items">
+          <span class="chip teal">auth.store</span>
+        </div>
+      </div>
+      <div class="layer api-layer">
+        <div class="layer-title" style="color:#93c5fd">API Layer (Axios)</div>
+        <div class="layer-items">
+          <span class="chip blue">client.ts</span>
+          <span class="chip blue">endpoints.ts</span>
+          <span class="chip blue">types.ts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrow -->
+  <div class="arrow-area">
+    <div class="arrow">→</div>
+    <div class="arrow-label">HTTP<br/>REST</div>
+    <div class="arrow">←</div>
+  </div>
+
+  <!-- BACKEND -->
+  <div class="arch-box backend">
+    <h2>⚙️ Backend <span style="color:#334155;font-weight:400;font-size:0.8rem">api/</span></h2>
+    <div class="layers">
+      <div class="layer b-routes">
+        <div class="layer-title" style="color:#86efac">Routes</div>
+        <div class="layer-items">
+          <span class="chip green">auth</span>
+          <span class="chip green">event</span>
+          <span class="chip green">order</span>
+          <span class="chip green">review</span>
+          <span class="chip green">user</span>
+          <span class="chip green">voucher</span>
+          <span class="chip green">wallet</span>
+        </div>
+      </div>
+      <div class="layer b-mid">
+        <div class="layer-title" style="color:#fcd34d">Middlewares</div>
+        <div class="layer-items">
+          <span class="chip amber">auth</span>
+          <span class="chip amber">validate</span>
+          <span class="chip amber">upload</span>
+          <span class="chip amber">rate-limit</span>
+          <span class="chip amber">error</span>
+          <span class="chip amber">not-found</span>
+        </div>
+      </div>
+      <div class="layer b-ctrl">
+        <div class="layer-title" style="color:#86efac">Controllers</div>
+        <div class="layer-items">
+          <span class="chip lime">auth</span>
+          <span class="chip lime">event</span>
+          <span class="chip lime">order</span>
+          <span class="chip lime">review</span>
+          <span class="chip lime">user</span>
+          <span class="chip lime">voucher</span>
+          <span class="chip lime">wallet</span>
+        </div>
+      </div>
+      <div class="layer b-svc">
+        <div class="layer-title" style="color:#4ade80">Services</div>
+        <div class="layer-items">
+          <span class="chip green">auth</span>
+          <span class="chip green">event</span>
+          <span class="chip green">order</span>
+          <span class="chip green">review</span>
+          <span class="chip green">user</span>
+          <span class="chip green">voucher</span>
+          <span class="chip green">wallet</span>
+        </div>
+      </div>
+      <div class="layer b-queue">
+        <div class="layer-title" style="color:#fdba74">Queues & Workers (BullMQ)</div>
+        <div class="layer-items">
+          <span class="chip orange">order.queue</span>
+          <span class="chip orange">order.scheduler</span>
+          <span class="chip orange">order.worker</span>
+          <span class="chip orange">order.cron</span>
+        </div>
+      </div>
+      <div class="layer b-lib">
+        <div class="layer-title" style="color:#c4b5fd">Libs & Utils</div>
+        <div class="layer-items">
+          <span class="chip violet">prisma</span>
+          <span class="chip violet">redis</span>
+          <span class="chip violet">cloudinary</span>
+          <span class="chip violet">resend</span>
+          <span class="chip gray">logger</span>
+          <span class="chip gray">email</span>
+          <span class="chip gray">app-error</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrow to DB -->
+  <div class="arrow-area">
+    <div class="arrow">→</div>
+    <div class="arrow-label">Prisma<br/>ORM</div>
+    <div class="arrow">←</div>
+  </div>
+
+  <!-- DATABASE -->
+  <div class="arch-box db">
+    <div class="db-icon">🗄️</div>
+    <h2>Database</h2>
+    <div class="db-tables">
+      <div class="db-table"><span class="icon">👤</span> User</div>
+      <div class="db-table"><span class="icon">🎪</span> Event</div>
+      <div class="db-table"><span class="icon">🖼️</span> EventImage</div>
+      <div class="db-table"><span class="icon">📦</span> Order</div>
+      <div class="db-table"><span class="icon">⭐</span> Review</div>
+      <div class="db-table"><span class="icon">🎫</span> Voucher</div>
+      <div class="db-table"><span class="icon">💰</span> Wallet</div>
+    </div>
+    <div style="margin-top:0.6rem;font-size:0.65rem;color:#6d28d9;font-weight:600;">PostgreSQL</div>
+    <div style="margin-top:0.3rem;font-size:0.62rem;color:#4c1d95;">+ Redis Cache</div>
+  </div>
+</div>
+
+<!-- Request Flow -->
+<div class="flow-section">
+  <h3>Request Flow</h3>
+  <div class="flow">
+    <div class="flow-node fn-client">Browser<br/>(React)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node fn-client">Axios Client<br/>+ endpoints.ts</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node fn-route">Express<br/>Router</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node fn-mid">Middleware<br/>Auth / Validate</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node fn-ctrl">Controller</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node fn-svc">Service<br/>(Business Logic)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node fn-prisma">Prisma ORM</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node fn-db">PostgreSQL</div>
+    <div style="flex-basis:100%;height:0.5rem;"></div>
+    <div class="flow-node fn-queue">Order Queue<br/>(BullMQ)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node fn-redis">Redis</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node fn-queue">Worker<br/>+ Cron</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node fn-svc">Email<br/>(Resend)</div>
+  </div>
+</div>
+
+<!-- Tech Stack -->
+<div class="tech-section">
+  <h3>Tech Stack</h3>
+  <div class="tech-grid">
+    <div class="tech-card"><span class="icon">⚛️</span><div><div class="name">React 19</div><div class="cat">Frontend Framework</div></div></div>
+    <div class="tech-card"><span class="icon">⚡</span><div><div class="name">Vite</div><div class="cat">Build Tool</div></div></div>
+    <div class="tech-card"><span class="icon">🔷</span><div><div class="name">TypeScript</div><div class="cat">Language</div></div></div>
+    <div class="tech-card"><span class="icon">🐻</span><div><div class="name">Zustand</div><div class="cat">State Management</div></div></div>
+    <div class="tech-card"><span class="icon">🎨</span><div><div class="name">Tailwind CSS</div><div class="cat">Styling</div></div></div>
+    <div class="tech-card"><span class="icon">🧩</span><div><div class="name">shadcn/ui</div><div class="cat">UI Components</div></div></div>
+    <div class="tech-card"><span class="icon">🔗</span><div><div class="name">React Router</div><div class="cat">Client Routing</div></div></div>
+    <div class="tech-card"><span class="icon">📡</span><div><div class="name">Axios</div><div class="cat">HTTP Client</div></div></div>
+    <div class="tech-card"><span class="icon">🟢</span><div><div class="name">Express.js</div><div class="cat">Backend Framework</div></div></div>
+    <div class="tech-card"><span class="icon">🔷</span><div><div class="name">TypeScript</div><div class="cat">Language</div></div></div>
+    <div class="tech-card"><span class="icon">🔺</span><div><div class="name">Prisma ORM</div><div class="cat">Database ORM</div></div></div>
+    <div class="tech-card"><span class="icon">🐘</span><div><div class="name">PostgreSQL</div><div class="cat">Database</div></div></div>
+    <div class="tech-card"><span class="icon">🔴</span><div><div class="name">Redis</div><div class="cat">Cache / Queue</div></div></div>
+    <div class="tech-card"><span class="icon">🐂</span><div><div class="name">BullMQ</div><div class="cat">Job Queue</div></div></div>
+    <div class="tech-card"><span class="icon">☁️</span><div><div class="name">Cloudinary</div><div class="cat">Image Storage</div></div></div>
+    <div class="tech-card"><span class="icon">📧</span><div><div class="name">Resend</div><div class="cat">Email Service</div></div></div>
+    <div class="tech-card"><span class="icon">🔑</span><div><div class="name">JWT</div><div class="cat">Authentication</div></div></div>
+    <div class="tech-card"><span class="icon">✅</span><div><div class="name">Zod</div><div class="cat">Validation</div></div></div>
+  </div>
+</div>
+
+<br/>
+
+<!-- File Tree -->
+<div class="tree-section">
+  <h3>File Tree</h3>
+  <div class="tree-wrap">
+
+    <!-- Frontend tree -->
+    <div class="tree-box">
+      <h4 class="fe">🌐 web/ (Frontend)</h4>
+<span class="prefix">├── </span><span class="d">src/</span><br/>
+<span class="prefix">│   ├── </span><span class="d">pages/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">HomePage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">EventsPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">EventDetailPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">CreateEventPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">EditEventPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">LoginPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">RegisterPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">ProfilePage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">OrganizerDashboardPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">OrganizerOrdersPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">CustomerOrdersPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">TicketPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">VouchersPage.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">WalletPage.tsx</span><br/>
+<span class="prefix">│   │   └── </span><span class="fp">NotFoundPage.tsx</span><br/>
+<span class="prefix">│   ├── </span><span class="d">routes/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">AuthRoute.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">GuestRoute.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">CustomerRoute.tsx</span><br/>
+<span class="prefix">│   │   └── </span><span class="fc">OrganizerRoute.tsx</span><br/>
+<span class="prefix">│   ├── </span><span class="d">components/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">Header.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">EventCard.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">ReviewForm.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">WriteReviewModal.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">StatusBadge.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">EmptyState.tsx</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fp">LoadingSpinner.tsx</span><br/>
+<span class="prefix">│   │   └── </span><span class="d">ui/</span> <span class="f">(shadcn)</span><br/>
+<span class="prefix">│   ├── </span><span class="d">hooks/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">useEvents.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">useOrders.ts</span><br/>
+<span class="prefix">│   │   └── </span><span class="fc">useDebounce.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">store/</span><br/>
+<span class="prefix">│   │   └── </span><span class="fc">auth.store.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">api/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">client.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">endpoints.ts</span><br/>
+<span class="prefix">│   │   └── </span><span class="fc">types.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">layouts/</span><br/>
+<span class="prefix">│   │   └── </span><span class="fp">RootLayout.tsx</span><br/>
+<span class="prefix">│   └── </span><span class="d">lib/</span><br/>
+<span class="prefix">│       ├── </span><span class="fc">utils.ts</span><br/>
+<span class="prefix">│       └── </span><span class="fc">format.ts</span><br/>
+<span class="prefix">├── </span><span class="f">App.tsx</span><br/>
+<span class="prefix">├── </span><span class="f">main.tsx</span><br/>
+<span class="prefix">└── </span><span class="f">vite.config.ts</span>
+    </div>
+
+    <!-- Backend tree -->
+    <div class="tree-box">
+      <h4 class="be">⚙️ api/ (Backend)</h4>
+<span class="prefix">├── </span><span class="d">src/</span><br/>
+<span class="prefix">│   ├── </span><span class="d">routes/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">auth.route.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">event.route.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">order.route.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">review.route.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">user.route.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">voucher.route.ts</span><br/>
+<span class="prefix">│   │   └── </span><span class="fc">wallet.route.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">controllers/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">auth.controller.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">event.controller.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">order.controller.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">review.controller.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">user.controller.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">voucher.controller.ts</span><br/>
+<span class="prefix">│   │   └── </span><span class="fc">wallet.controller.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">services/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">auth.service.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">event.service.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">order.service.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">review.service.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">user.service.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">voucher.service.ts</span><br/>
+<span class="prefix">│   │   └── </span><span class="fc">wallet.service.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">middlewares/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fh">auth.middleware.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fh">validate.middleware.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fh">upload.middleware.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fh">rate-limit.middleware.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fh">error.middleware.ts</span><br/>
+<span class="prefix">│   │   └── </span><span class="fh">not-found.middleware.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">queues/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fi">order.queue.ts</span><br/>
+<span class="prefix">│   │   └── </span><span class="fi">order.scheduler.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">workers/</span><br/>
+<span class="prefix">│   │   └── </span><span class="fi">order.worker.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">crons/</span><br/>
+<span class="prefix">│   │   └── </span><span class="fi">order.cron.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">validations/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">auth.validation.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">event.validation.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">order.validation.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fc">review.validation.ts</span><br/>
+<span class="prefix">│   │   └── </span><span class="fc">voucher.validation.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">lib/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fi">prisma.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fi">redis.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="fi">cloudinery.ts</span><br/>
+<span class="prefix">│   │   └── </span><span class="fi">resend.ts</span><br/>
+<span class="prefix">│   ├── </span><span class="d">utils/</span><br/>
+<span class="prefix">│   │   ├── </span><span class="f">app-error.ts</span><br/>
+<span class="prefix">│   │   ├── </span><span class="f">email.ts</span><br/>
+<span class="prefix">│   │   └── </span><span class="f">logger.ts</span><br/>
+<span class="prefix">│   └── </span><span class="d">templates/emails/</span><br/>
+<span class="prefix">│       ├── </span><span class="fh">welcome.hbs</span><br/>
+<span class="prefix">│       ├── </span><span class="fh">order-confirmation.hbs</span><br/>
+<span class="prefix">│       └── </span><span class="fh">order-confirmed.hbs</span><br/>
+<span class="prefix">├── </span><span class="d">prisma/</span><br/>
+<span class="prefix">│   └── </span><span class="f">schema.prisma</span><br/>
+<span class="prefix">└── </span><span class="f">app.ts</span>
+    </div>
+  </div>
+</div>
+
+<br/>
+<p style="text-align:center;color:#334155;font-size:0.7rem;padding-bottom:1rem;">Event Management App · babayag47 · 2026</p>
+
+</body>
+</html>
