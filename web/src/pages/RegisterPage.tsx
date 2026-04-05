@@ -77,7 +77,10 @@ export default function RegisterPage() {
                 <button
                   key={role}
                   type="button"
-                  onClick={() => update("role", role)}
+                  onClick={() => {
+                    update("role", role);
+                    if (role === "ORGANIZER") update("usedReferralCode", "");
+                  }}
                   className={`rounded-xl border-2 px-4 py-3 text-sm font-medium transition ${
                     form.role === role
                       ? "border-violet-500 bg-violet-900/40 text-violet-300"
@@ -90,14 +93,16 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-200">Referral Code (optional)</label>
-            <input
-              type="text" value={form.usedReferralCode} onChange={(e) => update("usedReferralCode", e.target.value)}
-              placeholder="Enter a referral code"
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-zinc-100 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-900"
-            />
-          </div>
+          {form.role === "CUSTOMER" && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-200">Referral Code (optional)</label>
+              <input
+                type="text" value={form.usedReferralCode} onChange={(e) => update("usedReferralCode", e.target.value)}
+                placeholder="Enter a referral code"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-zinc-100 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-900"
+              />
+            </div>
+          )}
 
           <button
             type="submit" disabled={loading}

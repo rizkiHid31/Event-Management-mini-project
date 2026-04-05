@@ -65,31 +65,33 @@ export default function WalletPage() {
         </div>
       </div>
 
-      {/* Referral Section */}
-      <div className="mt-6 rounded-2xl border border-zinc-700 bg-zinc-800 p-6">
-        <h2 className="text-lg font-bold text-zinc-100">Earn More</h2>
-        <p className="mt-1 text-sm text-zinc-500">
-          Share your referral code with friends. Both of you get Rp 10,000 bonus!
-        </p>
+      {/* Referral Section — CUSTOMER only */}
+      {profile?.role === "CUSTOMER" && (
+        <div className="mt-6 rounded-2xl border border-zinc-700 bg-zinc-800 p-6">
+          <h2 className="text-lg font-bold text-zinc-100">Earn More</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Share your referral code with friends. Both of you get Rp 10,000 bonus!
+          </p>
 
-        <div className="mt-4 flex items-center gap-3">
-          <div className="flex-1 rounded-xl bg-violet-900/40 px-4 py-3">
-            <p className="text-xs font-medium text-violet-400">Your Referral Code</p>
-            <p className="mt-1 text-xl font-bold tracking-widest text-violet-200">
-              {profile?.referralCode}
-            </p>
+          <div className="mt-4 flex items-center gap-3">
+            <div className="flex-1 rounded-xl bg-violet-900/40 px-4 py-3">
+              <p className="text-xs font-medium text-violet-400">Your Referral Code</p>
+              <p className="mt-1 text-xl font-bold tracking-widest text-violet-200">
+                {profile?.referralCode}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(profile?.referralCode || "");
+                alert("Referral code copied!");
+              }}
+              className="rounded-xl border border-violet-700 bg-violet-900/40 px-4 py-3 text-sm font-semibold text-violet-400 transition hover:bg-violet-900/60"
+            >
+              Copy
+            </button>
           </div>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(profile?.referralCode || "");
-              alert("Referral code copied!");
-            }}
-            className="rounded-xl border border-violet-700 bg-violet-900/40 px-4 py-3 text-sm font-semibold text-violet-400 transition hover:bg-violet-900/60"
-          >
-            Copy
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Info */}
       <div className="mt-6 rounded-2xl border border-zinc-700 bg-zinc-800 p-6">

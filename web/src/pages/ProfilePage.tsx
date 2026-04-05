@@ -144,10 +144,9 @@ export default function ProfilePage() {
               label: "Orders",
               value: profile._count?.Orders || 0,
             },
-            {
-              label: "Referrals",
-              value: profile._count?.Referrals || 0,
-            },
+            ...(profile.role === "CUSTOMER"
+              ? [{ label: "Referrals", value: profile._count?.Referrals || 0 }]
+              : [{ label: "Events", value: profile._count?.Events || 0 }]),
             {
               label: "Reviews",
               value: profile._count?.Reviews || 0,
@@ -176,28 +175,30 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* Referral Code */}
-        <div className="border-b border-zinc-700 px-8 py-5">
-          <div className="flex items-center justify-between rounded-xl bg-violet-900/40 px-4 py-3">
-            <div>
-              <p className="text-xs font-medium text-violet-400">
-                Your Referral Code
-              </p>
-              <p className="mt-0.5 text-lg font-bold tracking-widest text-violet-200">
-                {profile.referralCode}
-              </p>
+        {/* Referral Code — CUSTOMER only */}
+        {profile.role === "CUSTOMER" && (
+          <div className="border-b border-zinc-700 px-8 py-5">
+            <div className="flex items-center justify-between rounded-xl bg-violet-900/40 px-4 py-3">
+              <div>
+                <p className="text-xs font-medium text-violet-400">
+                  Your Referral Code
+                </p>
+                <p className="mt-0.5 text-lg font-bold tracking-widest text-violet-200">
+                  {profile.referralCode}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(profile.referralCode);
+                  toast.success("Referral code copied!");
+                }}
+                className="rounded-lg bg-violet-900/40 px-3 py-1.5 text-xs font-semibold text-violet-400 transition hover:bg-violet-900/60"
+              >
+                Copy
+              </button>
             </div>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(profile.referralCode);
-                toast.success("Referral code copied!");
-              }}
-              className="rounded-lg bg-violet-900/40 px-3 py-1.5 text-xs font-semibold text-violet-400 transition hover:bg-violet-900/60"
-            >
-              Copy
-            </button>
           </div>
-        </div>
+        )}
 
         {/* Edit Profile */}
         <div className="px-8 py-6">

@@ -32,9 +32,9 @@ export async function registerService(userInput: Record<string, unknown>) {
 
   const referralCode = generateReferralCode(parsedInput.name);
 
-  // Handle referral system
+  // Handle referral system — only for CUSTOMER role
   let referredById: number | undefined;
-  if (parsedInput.usedReferralCode) {
+  if (parsedInput.role === "CUSTOMER" && parsedInput.usedReferralCode) {
     const referrer = await prisma.user.findUnique({
       where: { referralCode: parsedInput.usedReferralCode },
     });
