@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/api/client";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import type { Order, OrderStatus } from "@/api/types";
-import { formatCurrency, formatDate, ORDER_STATUS_LABELS } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import StatusBadge from "@/components/StatusBadge";
 import Spinner from "@/components/Spinner";
 
