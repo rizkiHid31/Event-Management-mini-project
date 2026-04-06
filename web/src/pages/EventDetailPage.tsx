@@ -18,7 +18,7 @@ import {
 export default function EventDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { event, loading, error } = useEventDetail(slug!);
+  const { event, loading, error, refetch } = useEventDetail(slug!);
   const { isAuthenticated, user, updateUser } = useAuthStore();
   const [ordering, setOrdering] = useState(false);
 
@@ -293,7 +293,7 @@ export default function EventDetailPage() {
                   <div className="mt-3">
                     <ReviewForm
                       eventId={event.id}
-                      onReviewCreated={() => window.location.reload()}
+                      onReviewCreated={() => refetch()}
                     />
                   </div>
                 </div>
@@ -628,7 +628,7 @@ export default function EventDetailPage() {
           eventId={event.id}
           eventTitle={event.title}
           onClose={() => setShowReview(false)}
-          onSuccess={() => window.location.reload()}
+          onSuccess={() => refetch()}
         />
       )}
     </main>

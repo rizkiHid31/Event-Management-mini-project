@@ -4,7 +4,31 @@ import {
   updateUserProfileService,
   uploadAvatarService,
   changePasswordService,
+  getOrganizersService,
+  getOrganizerByIdService,
 } from "../services/user.service.js";
+
+export async function getOrganizersController(
+  req: Request, res: Response, next: NextFunction,
+) {
+  try {
+    const data = await getOrganizersService();
+    res.status(200).json({ data });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getOrganizerByIdController(
+  req: Request, res: Response, next: NextFunction,
+) {
+  try {
+    const data = await getOrganizerByIdService(Number(req.params.id));
+    res.status(200).json({ data });
+  } catch (error) {
+    next(error);
+  }
+}
 
 export async function getUserProfileController(
   req: Request, res: Response, next: NextFunction,

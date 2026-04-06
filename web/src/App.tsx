@@ -25,6 +25,8 @@ import CustomerOrdersPage from "./pages/CustomerOrdersPage";
 import TicketPage from "./pages/TicketPage";
 import WalletPage from "./pages/WalletPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import OrganizersPage from "./pages/OrganizersPage";
+import OrganizerProfilePage from "./pages/OrganizerProfilePage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AttendeeListPage from "./pages/AttendeeListPage";
@@ -38,6 +40,8 @@ export default function App() {
           <Route index element={<HomePage />} />
           <Route path="events" element={<EventsPage />} />
           <Route path="events/:slug" element={<EventDetailPage />} />
+          <Route path="organizers" element={<OrganizersPage />} />
+          <Route path="organizers/:id" element={<OrganizerProfilePage />} />
 
           {/* Guest only */}
           <Route element={<GuestRoute />}>

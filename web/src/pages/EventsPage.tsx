@@ -55,7 +55,7 @@ export default function EventsPage() {
           <button
             key={cat}
             onClick={() => handleCategoryChange(cat)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`hover-scale rounded-full px-4 py-2 text-sm font-medium transition ${
               category === cat
                 ? "bg-violet-600 text-white shadow-sm"
                 : "border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-violet-600"
@@ -94,8 +94,8 @@ export default function EventsPage() {
         </div>
       ) : (
         <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+          {events.map((event, i) => (
+            <EventCard key={event.id} event={event} index={i} />
           ))}
         </div>
       )}

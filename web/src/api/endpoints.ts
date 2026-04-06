@@ -35,6 +35,8 @@ export const API_ENDPOINTS = {
     UPDATE_PROFILE: "/users/profile",
     UPLOAD_AVATAR: "/users/profile/avatar",
     CHANGE_PASSWORD: "/users/profile/password",
+    ORGANIZERS: "/users/organizers",
+    ORGANIZER_BY_ID: (id: number) => `/users/organizers/${id}`,
   },
   VOUCHERS: {
     CREATE: "/vouchers",

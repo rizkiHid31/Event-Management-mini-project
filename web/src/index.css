@@ -1,5 +1,75 @@
 @import "tailwindcss";
 
+/* Light mode: swap zinc scale so dark-themed components invert automatically */
+html.light {
+  --color-zinc-50:  oklch(0.21  0.006 285.885);
+  --color-zinc-100: oklch(0.274 0.006 286.033);
+  --color-zinc-200: oklch(0.37  0.013 285.938);
+  --color-zinc-300: oklch(0.442 0.017 285.938);
+  --color-zinc-400: oklch(0.552 0.016 285.938);
+  --color-zinc-500: oklch(0.707 0.013 285.938);
+  --color-zinc-600: oklch(0.839 0.005 285.99);
+  --color-zinc-700: oklch(0.92  0.004 286.32);
+  --color-zinc-800: oklch(0.967 0.001 286.375);
+  --color-zinc-900: oklch(0.985 0.002 247.839);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+@keyframes heroFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.hero-slide-enter {
+  animation: heroFade 0.6s ease-out both;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.15; }
+  50%       { opacity: 0.3; }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: pageIn 0.3s ease-out both;
+}
+
+.hover-scale {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.hover-scale:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
 @layer base {
   *,
   *::before,

@@ -4,13 +4,15 @@ import { formatCurrency, formatDate, CATEGORY_EMOJI } from "@/lib/format";
 
 interface Props {
   event: EventItem;
+  index?: number;
 }
 
-export default function EventCard({ event }: Props) {
+export default function EventCard({ event, index = 0 }: Props) {
   return (
     <Link
       to={`/events/${event.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-800 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+      className="animate-fade-in-up group flex flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-800 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+      style={{ animationDelay: `${index * 0.07}s` }}
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-zinc-700">
         {event.image ? (

@@ -4,6 +4,132 @@ import { cloudinary } from "../lib/cloudinery.js";
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/app-error.js";
 
+export async function getOrganizersService() {
+  const now = new Date();
+
+  const organizers = await (prisma.user as any).findMany({
+    where: {
+      role: "ORGANIZER",
+      deletedAt: null,
+      Events: {
+        some: {
+          startDate: { gte: now },
+          deletedAt: null,
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      avatar: true,
+      Events: {
+        where: { deletedAt: null },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          image: true,
+          category: true,
+          startDate: true,
+          location: true,
+          isFree: true,
+          price: true,
+          Reviews: { select: { rating: true } },
+        },
+        orderBy: { startDate: "asc" },
+      },
+    },
+  });
+
+  return organizers.map((org: any) => {
+    const upcomingEvents = org.Events.filter(
+      (e: any) => new Date(e.startDate) >= now,
+    ).map(({ Reviews, ...e }: any) => e);
+
+    const allReviews = org.Events.flatMap((e: any) => e.Reviews);
+    const avgRating =
+      allReviews.length > 0
+        ? allReviews.reduce((sum: number, r: any) => sum + r.rating, 0) /
+          allReviews.length
+        : 0;
+
+    return {
+      id: org.id,
+      name: org.name,
+      avatar: org.avatar,
+      avgRating: Math.round(avgRating * 10) / 10,
+      totalEvents: org.Events.length,
+      upcomingEvents,
+    };
+  });
+}
+
+export async function getOrganizerByIdService(organizerId: number) {
+  const now = new Date();
+
+  const org = await (prisma.user as any).findFirst({
+    where: { id: organizerId, role: "ORGANIZER", deletedAt: null },
+    select: {
+      id: true,
+      name: true,
+      avatar: true,
+      bio: true,
+      createdAt: true,
+      Events: {
+        where: { deletedAt: null },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          image: true,
+          category: true,
+          startDate: true,
+          endDate: true,
+          location: true,
+          isFree: true,
+          price: true,
+          capacity: true,
+          Reviews: { select: { rating: true } },
+          _count: { select: { Orders: true, Reviews: true } },
+        },
+        orderBy: { startDate: "asc" },
+      },
+    },
+  });
+
+  if (!org) throw new AppError("Organizer not found", 404);
+
+  const allReviews = org.Events.flatMap((e: any) => e.Reviews);
+  const avgRating =
+    allReviews.length > 0
+      ? allReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / allReviews.length
+      : 0;
+
+  const upcomingEvents = org.Events.filter((e: any) => new Date(e.startDate) >= now);
+  const pastEvents = org.Events.filter((e: any) => new Date(e.startDate) < now);
+
+  const mapEvent = ({ Reviews, ...e }: any) => ({
+    ...e,
+    avgRating:
+      e.Reviews?.length > 0
+        ? Math.round((e.Reviews.reduce((s: number, r: any) => s + r.rating, 0) / e.Reviews.length) * 10) / 10
+        : 0,
+  });
+
+  return {
+    id: org.id,
+    name: org.name,
+    avatar: org.avatar,
+    bio: org.bio,
+    createdAt: org.createdAt,
+    avgRating: Math.round(avgRating * 10) / 10,
+    totalEvents: org.Events.length,
+    totalReviews: allReviews.length,
+    upcomingEvents: upcomingEvents.map(mapEvent),
+    pastEvents: pastEvents.map(mapEvent),
+  };
+}
+
 export async function getUserProfileService(userId: number) {
   const userModel = prisma.user as any;
 
@@ -33,7 +159,6 @@ export async function getUserProfileService(userId: number) {
 
   if (!user) throw new AppError("User not found", 404);
 
-  console.log("[getUserProfile] userId:", userId, "Wallet:", user.Wallet);
 
   return user;
 }
